@@ -139,7 +139,7 @@ smallestDivisor n = smallestDivisorHelper n (n -1)
   where
     smallestDivisorHelper n t = case divMod n t of
       (k, 0) -> k
-      (_, _) -> smallestDivisorHelper n (t -1)
+      _ -> smallestDivisorHelper n (t -1)
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a function isPrime that checks if the given number
