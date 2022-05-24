@@ -5,14 +5,15 @@
 
 module Set3a where
 
-import Mooc.Todo
-
 -- Some imports you'll need.
 -- Do not add any other imports! :)
 import Data.Char
 import Data.Either
 import Data.List
+import Data.Void (vacuous)
+import Mooc.Todo
 
+-- 多参数函数调用，是通过多个单参数调用实现的，表示这样的多参数函数叫做`currying`
 ------------------------------------------------------------------------------
 -- Ex 1: implement the function maxBy that takes as argument a
 -- measuring function (of type a -> Int) and two values (of type a).
@@ -28,7 +29,7 @@ import Data.List
 --  maxBy head   [1,2,3] [4,5]  ==>  [4,5]
 
 maxBy :: (a -> Int) -> a -> a -> a
-maxBy measure a b = todo
+maxBy measure a b = if measure a > measure b then a else b
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement the function mapMaybe that takes a function and a
@@ -40,7 +41,9 @@ maxBy measure a b = todo
 --   mapMaybe length (Just "abc") ==> Just 3
 
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
-mapMaybe f x = todo
+-- mapMaybe f x = todo
+mapMaybe f Nothing = Nothing
+mapMaybe f (Just a) = Just (f a)
 
 ------------------------------------------------------------------------------
 -- Ex 3: implement the function mapMaybe2 that works like mapMaybe
@@ -54,7 +57,10 @@ mapMaybe f x = todo
 --   mapMaybe2 div (Just 6) Nothing   ==>  Nothing
 
 mapMaybe2 :: (a -> b -> c) -> Maybe a -> Maybe b -> Maybe c
-mapMaybe2 f x y = todo
+-- mapMaybe2 f x y = todo
+mapMaybe2 f Nothing _ = Nothing
+mapMaybe2 f _ Nothing = Nothing
+mapMaybe2 f (Just a) (Just b) = Just (f a b)
 
 ------------------------------------------------------------------------------
 -- Ex 4: define the functions firstHalf and palindrome so that
@@ -76,9 +82,15 @@ mapMaybe2 f x y = todo
 palindromeHalfs :: [String] -> [String]
 palindromeHalfs xs = map firstHalf (filter palindrome xs)
 
-firstHalf = todo
+-- firstHalf = todo
+firstHalf :: String -> String
+firstHalf x
+  | odd (length x) = take (div (length x) 2 + 1) x
+  | otherwise = take (div (length x) 2) x
 
-palindrome = todo
+-- palindrome = todo
+palindrome :: String -> Bool
+palindrome xs = xs == reverse xs
 
 ------------------------------------------------------------------------------
 -- Ex 5: Implement a function capitalize that takes in a string and
@@ -96,7 +108,8 @@ palindrome = todo
 --   capitalize "goodbye cruel world" ==> "Goodbye Cruel World"
 
 capitalize :: String -> String
-capitalize = todo
+-- capitalize = todo
+capitalize s = unwords [toUpper f : o | (f : o) <- words s]
 
 ------------------------------------------------------------------------------
 -- Ex 6: powers k max should return all the powers of k that are less
@@ -113,7 +126,10 @@ capitalize = todo
 --   * the function takeWhile
 
 powers :: Int -> Int -> [Int]
-powers k max = todo
+-- powers k max = todo
+-- not work
+-- powers k max = [k^i |i<-[0..max], k^i <= max]
+powers k max = takeWhile (<= max) (map (k ^) [0 ..])
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a functional while loop. While should be a function
@@ -135,8 +151,11 @@ powers k max = todo
 --   in while check tail "xyzAvvt"
 --     ==> Avvt
 
-while :: (a->Bool) -> (a->a) -> a -> a
-while check update value = todo
+while :: (a -> Bool) -> (a -> a) -> a -> a
+-- while check update value = todo
+while check update value
+  | check value = while check update (update value)
+  | otherwise = value
 
 ------------------------------------------------------------------------------
 -- Ex 8: another version of a while loop. This time, the check
@@ -156,17 +175,20 @@ while check update value = todo
 -- Hint! Remember the case-of expression from lecture 2.
 
 whileRight :: (a -> Either b a) -> a -> b
-whileRight check x = todo
+-- whileRight check x = todo
+whileRight check x = case check x of
+  Left res -> res -- pattern match
+  Right newX -> whileRight check newX
 
 -- for the whileRight examples:
 -- step k x doubles x if it's less than k
 step :: Int -> Int -> Either Int Int
-step k x = if x<k then Right (2*x) else Left x
+step k x = if x < k then Right (2 * x) else Left x
 
 -- bomb x implements a countdown: it returns x-1 or "BOOM" if x was 0
 bomb :: Int -> Either String Int
 bomb 0 = Left "BOOM"
-bomb x = Right (x-1)
+bomb x = Right (x -1)
 
 ------------------------------------------------------------------------------
 -- Ex 9: given a list of strings and a length, return all strings that
@@ -180,7 +202,8 @@ bomb x = Right (x-1)
 -- Hint! This is a great use for list comprehensions
 
 joinToLength :: Int -> [String] -> [String]
-joinToLength = todo
+-- joinToLength = todo
+joinToLength n ss = [s1 ++ s2 | s1 <- ss, s2 <- ss, length (s1 ++ s2) == n] -- list comprehension and filter
 
 ------------------------------------------------------------------------------
 -- Ex 10: implement the operator +|+ that returns a list with the first
@@ -193,7 +216,12 @@ joinToLength = todo
 --   [1,2,3] +|+ [4,5,6]  ==> [1,4]
 --   [] +|+ [True]        ==> [True]
 --   [] +|+ []            ==> []
-
+xs +|+ yx = go xs yx
+  where
+    go (a : _) (b : _) = [a, b]
+    go [] (b : _) = [b]
+    go (a : _) [] = [a]
+    go [] [] = []
 
 ------------------------------------------------------------------------------
 -- Ex 11: remember the lectureParticipants example from Lecture 2? We
@@ -210,7 +238,10 @@ joinToLength = todo
 --   sumRights [Left "bad!", Left "missing"]         ==>  0
 
 sumRights :: [Either a Int] -> Int
-sumRights = todo
+-- sumRights = todo
+sumRights [] = 0
+sumRights (Right n : xs) = n + sumRights xs
+sumRights (Left _ : xs) = sumRights xs
 
 ------------------------------------------------------------------------------
 -- Ex 12: recall the binary function composition operation
@@ -226,7 +257,12 @@ sumRights = todo
 --   multiCompose [(3*), (2^), (+1)] 0 ==> 6
 --   multiCompose [(+1), (2^), (3*)] 0 ==> 2
 
-multiCompose fs = todo
+-- multiCompose fs = todo
+multiCompose [] v = v
+multiCompose [f] v = f v
+multiCompose (f : fx) v = f (multiCompose fx v)
+
+-- multiCompose (fs : f: []) v = multiCompose fs (f v)
 
 ------------------------------------------------------------------------------
 -- Ex 13: let's consider another way to compose multiple functions. Given
@@ -247,7 +283,19 @@ multiCompose fs = todo
 --   multiApp id [head, (!!2), last] "axbxc" ==> ['a','b','c'] i.e. "abc"
 --   multiApp sum [head, (!!2), last] [1,9,2,9,3] ==> 6
 
-multiApp = todo
+-- multiApp = todo
+-- list comprehensions
+-- multiApp f gs x = f [g x | g <- gs]
+-- lamba and partial Application
+-- multiApp f gs x = f (map (\y -> y x) gs)
+
+multiApp f gs x = go f gs x []
+  where
+    -- go f [] x res = f res
+    -- go f (g : gx) x res = go f gx x (res ++ [g x])
+
+    go f [] x res = f (reverse res)
+    go f (g : gx) x res = go f gx x (g x : res)
 
 ------------------------------------------------------------------------------
 -- Ex 14: in this exercise you get to implement an interpreter for a
@@ -282,4 +330,16 @@ multiApp = todo
 -- function, the surprise won't work.
 
 interpreter :: [String] -> [String]
-interpreter commands = todo
+-- interpreter commands = todo
+interpreter commands = go commands 0 0 []
+  where
+    go [] x y res = reverse res
+    go ("up" : otherCmds) x y res = go otherCmds x (y + 1) res
+    go ("down" : otherCmds) x y res = go otherCmds x (y -1) res
+    go ("left" : otherCmds) x y res = go otherCmds (x -1) y res
+    go ("right" : otherCmds) x y res = go otherCmds (x + 1) y res
+    -- go ("printX" : otherCmds) x y res = go otherCmds x y (res ++ [show x])
+    go ("printX" : otherCmds) x y res = show x : go otherCmds x y res
+    -- go ("printY" : otherCmds) x y res = go otherCmds x y (res ++ [show y])
+    go ("printY" : otherCmds) x y res = show y : go otherCmds x y res
+    go _ _ _ res = res
