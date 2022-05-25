@@ -52,9 +52,12 @@ buildList start count end = start : buildList start (count -1) end
 sums :: Int -> [Int]
 -- sums i = todo
 sums i = go i 1 1
-    where   go 1 final i = [final]
-            go i cur cnt = cur: go (i-1) (cur+cnt+1) (cnt+1)
-
+  where
+    go 1 final i = [final]
+    -- go i cur cnt = cur : let c = cnt + 1 in go (i -1) (cur + c) c
+    go i cur cnt = cur : go (i -1) (cur + c) c
+      where
+        c = cnt + 1
 
 ------------------------------------------------------------------------------
 -- Ex 3: define a function mylast that returns the last value of the
